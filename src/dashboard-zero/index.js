@@ -166,7 +166,7 @@ function apiAllComments(isExport, callback) {
       if (isExport === true) {
         callback(null, 'Export not supported yet')
       } else {
-        callback(rows)
+        callback(null, rows)
       }
     })
 }
