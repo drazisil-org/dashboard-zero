@@ -394,7 +394,11 @@ function getCommentsFromIssue (issue_id) {
   // console.info('Fetching issue comments for ' + REPO_LIST[repo_index].repo)
 
   github.issues.getComments({'user': REPO_LIST[repo_index].org, 'repo': REPO_LIST[repo_index].repo, 'number': issue_id, 'per_page': 100}, function cb_get_comments_from_issue (err, res) {
-    fetchIssueComments(err, processIssueComments(err, res))
+    var status = fetchIssueComments(err, processIssueComments(err, res))
+    if (status === '504: Gateway Timeout') {
+      console.log(status + ': Retrying...')
+      getCommentsFromIssue(issue_id)
+    }
   })
 }
 
@@ -418,8 +422,7 @@ function processIssueComments (err, res) {
       console.log('Done with this repo')
       return 'Done with this repo'
     } else if (err.message === '504: Gateway Timeout') {
-      console.trace()
-      throw err
+      return '504: Gateway Timeout'
     } else {
       // Why does this error?
       console.trace()
