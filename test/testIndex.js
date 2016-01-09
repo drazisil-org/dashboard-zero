@@ -10,7 +10,7 @@ describe('API', function () {
   it('can fetch all comments', function (done) {
     dz.apiAllComments(true, function (err, stats) {
       if (err) {
-        assert.equal('ENOENT', err.code)
+        assert.equal('ENOENT', err.message)
         done()
       } else {
         assert.equal(true, stats.isFile())
@@ -22,7 +22,7 @@ describe('API', function () {
   it('Ccan export all comments', function (done) {
     dz.apiAllComments(false, function (err, stats) {
       if (err) {
-        assert.equal('ENOENT', err.code)
+        assert.equal('ENOENT', err.message)
         done()
       } else {
         assert.equal(true, stats.isFile())
