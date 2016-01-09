@@ -398,6 +398,9 @@ function getCommentsFromIssue (issue_id) {
     if (status === '504: Gateway Timeout') {
       console.log(status + ': Retrying...')
       getCommentsFromIssue(issue_id)
+    } else if (true) {
+      console.error('Unable to fetch issue comments for issue id: ' + issue_id)
+      process.exit(1)
     }
   })
 }
@@ -422,7 +425,9 @@ function processIssueComments (err, res) {
       console.log('Done with this repo')
       return 'Done with this repo'
     } else if (err.message === '504: Gateway Timeout') {
-      return '504: Gateway Timeout'
+      return err.message
+    } else if (err.message === 'Not Found') {
+      return err.message
     } else {
       // Why does this error?
       console.trace()
