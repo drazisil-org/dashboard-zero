@@ -8,36 +8,36 @@ Promise.promisifyAll(fs)
 var assert = require('assert')
 describe('API', function () {
   it('can create tables', function (done) {
-    dz.dbCreateTables(function (err, stats) {
+    dz.dbCreateTables(function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
       } else {
-        assert.equal(true, stats.isFile())
+        assert.equal(true, res)
         done()
       }
     })
   })
 
   it('can fetch all comments', function (done) {
-    dz.apiAllComments(true, function (err, stats) {
+    dz.apiAllComments(true, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
       } else {
-        assert.equal(true, stats.isFile())
+        assert.equal(true, res)
         done()
       }
     })
   })
 
   it('Ccan export all comments', function (done) {
-    dz.apiAllComments(false, function (err, stats) {
+    dz.apiAllComments(false, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
       } else {
-        assert.equal(true, stats.isFile())
+        assert.equal(true, res)
         done()
       }
     })
