@@ -31,7 +31,31 @@ describe('API', function () {
     })
   })
 
-  it('Ccan export all comments', function (done) {
+  it('can export all comments', function (done) {
+    dz.apiAllComments(true, function (err, res) {
+      if (err) {
+        assert.equal('ENOENT', err.message)
+        done()
+      } else {
+        assert.equal('Export not supported yet', res)
+        done()
+      }
+    })
+  })
+
+  it('can fetch all issues', function (done) {
+    dz.apiAllComments(false, function (err, res) {
+      if (err) {
+        assert.equal('ENOENT', err.message)
+        done()
+      } else {
+        assert.equal('', res)
+        done()
+      }
+    })
+  })
+
+  it('can export all issues', function (done) {
     dz.apiAllComments(true, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)

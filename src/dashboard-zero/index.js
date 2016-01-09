@@ -55,7 +55,7 @@ function startServer () {
     if (req.query.export) {
       isExport = true
     }
-    apiAllComments(isExport, function (err, res) {
+    apiAllComments(isExport, function (err, rows) {
       if (err) {
         console.error(err.message)
         logger.error(err.message)
@@ -64,17 +64,16 @@ function startServer () {
     })
   })
   app.get('/api/all/issues', function (req, res) {
-    var sql = 'SELECT * FROM issues'
-    dbFetchAll(sql, function cb_db_fetch_issues (err, rows) {
+    var isExport = false
+    if (req.query.export) {
+      isExport = true
+    }
+    apiAllIssues(isExport, function (err, rows) {
       if (err) {
         console.error(err.message)
         logger.error(err.message)
       }
-      if (req.query.export) {
-        res.send('Export not supported...yet')
-      } else {
-        res.send(rows)
-      }
+      res.send(rows)
     })
   })
   app.get('/api/all/issues/untouched', function (req, res) {
@@ -157,18 +156,32 @@ function startServer () {
 // API
 // ****************************
 
-function apiAllComments(isExport, callback) {
-    var sql = 'SELECT * FROM comments'
-    dbFetchAll(sql, function cb_db_fetch_comments (err, rows) {
-      if (err) {
-        callback(err)
-      }
-      if (isExport === true) {
-        callback(null, 'Export not supported yet')
-      } else {
-        callback(null, rows)
-      }
-    })
+function apiAllComments (isExport, callback) {
+  var sql = 'SELECT * FROM comments'
+  dbFetchAll(sql, function cb_db_fetch_comments (err, rows) {
+    if (err) {
+      callback(err)
+    }
+    if (isExport === true) {
+      callback(null, 'Export not supported yet')
+    } else {
+      callback(null, rows)
+    }
+  })
+}
+
+function apiAllIssues (isExport, callback) {
+  var sql = 'SELECT * FROM issues'
+  dbFetchAll(sql, function cb_db_fetch_issues (err, rows) {
+    if (err) {
+      callback(err)
+    }
+    if (isExport === true) {
+      callback(null, 'Export not supported yet')
+    } else {
+      callback(null, rows)
+    }
+  })
 }
 
 // *****************************
@@ -407,5 +420,6 @@ module.exports = {
   startServer: startServer,
   timerId: timerId,
   apiAllComments: apiAllComments,
+  apiAllIssues: apiAllIssues,
   dbCreateTables: dbCreateTables
 }
