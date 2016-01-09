@@ -14,7 +14,7 @@
     "url": "git+https://github.com/adamlofting/dashboard-zero.git"
   },
   "author": "",
-  "license": "MPL",
+  "license": "MPL-2.0",
   "dependencies": {
     "async": "^1.5.0",
     "csv": "^0.4.6",
