@@ -1,4 +1,4 @@
-var dz = require('./src/dashboard-zero/index.js')
+var dz = require('../src/dashboard-zero/index.js')
 /* global describe it */
 
 var Promise = require('bluebird')
