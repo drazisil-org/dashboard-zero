@@ -44,7 +44,7 @@ describe('API', function () {
   })
 
   it('can fetch all issues', function (done) {
-    dz.apiAllComments(false, function (err, res) {
+    dz.apiAllIssues(false, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
@@ -56,7 +56,7 @@ describe('API', function () {
   })
 
   it('can export all issues', function (done) {
-    dz.apiAllComments(true, function (err, res) {
+    dz.apiAllIssues(true, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
