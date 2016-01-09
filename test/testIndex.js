@@ -1,3 +1,4 @@
+var dz = require('./src/dashboard-zero/index.js')
 /* global describe it */
 
 var Promise = require('bluebird')
@@ -5,9 +6,9 @@ var fs = require('fs')
 Promise.promisifyAll(fs)
 
 var assert = require('assert')
-describe('Files', function () {
-  it('reposByOrg.json exists', function (done) {
-    fs.stat('data/reposByOrg.json', function (err, stats) {
+describe('API', function () {
+  it('can fetch all comments', function (done) {
+    dz.apiAllComments(true, function (err, stats) {
       if (err) {
         assert.equal('ENOENT', err.code)
         done()
@@ -17,11 +18,9 @@ describe('Files', function () {
       }
     })
   })
-})
 
-describe('Database', function () {
-  it('orgs.db exists', function (done) {
-    fs.stat('data/orgs.db', function (err, stats) {
+  it('Ccan export all comments', function (done) {
+    dz.apiAllComments(false, function (err, stats) {
       if (err) {
         assert.equal('ENOENT', err.code)
         done()
