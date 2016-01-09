@@ -13,7 +13,7 @@ describe('API', function () {
         assert.equal('ENOENT', err.message)
         done()
       } else {
-        assert.equal(true, res)
+        assert.equal('Success: tables created', res)
         done()
       }
     })
@@ -25,7 +25,7 @@ describe('API', function () {
         assert.equal('ENOENT', err.message)
         done()
       } else {
-        assert.equal(true, res)
+        assert.equal('', res)
         done()
       }
     })
