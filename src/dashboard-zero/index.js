@@ -51,17 +51,17 @@ function startServer () {
     next()
   })
   app.get('/api/all/comments', function (req, res) {
-    var sql = 'SELECT * FROM comments'
-    dbFetchAll(sql, function cb_db_fetch_comments (err, rows) {
-      if (err) {
-        console.error(err.message)
-        logger.error(err.message)
-      }
+      var isExport = false
       if (req.query.export) {
-        res.send('Export not supported...yet')
-      } else {
-        res.send(rows)
+        isExport = true
       }
+      apiAllComments(isExport, function (err, res) {
+        if (err) {
+          console.error(err.message)
+          logger.error(err.message)
+        }
+        res.send(rows)
+      })
     })
   })
   app.get('/api/all/issues', function (req, res) {
@@ -152,6 +152,24 @@ function startServer () {
 
   app.listen(SERVER_PORT)
   console.info('Server now running on http://localhost:' + SERVER_PORT)
+}
+
+// *****************************
+// API
+// ****************************
+
+function apiAllComments(isExport, callback) {
+    var sql = 'SELECT * FROM comments'
+    dbFetchAll(sql, function cb_db_fetch_comments (err, rows) {
+      if (err) {
+        callback(err)
+      }
+      if (isExport === true) {
+        callback(null, 'Export not supported yet')
+      } else {
+        callback(rows)
+      }
+    })
 }
 
 // *****************************
@@ -388,5 +406,6 @@ module.exports = {
   checkDataFiles: checkDataFiles,
   updateData: updateData,
   startServer: startServer,
-  timerId: timerId
+  timerId: timerId,
+  apiAllComments: apiAllComments
 }
