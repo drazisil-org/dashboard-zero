@@ -255,7 +255,7 @@ function dbCreateTables (callback) {
   dbDashZero.run('CREATE TABLE IF NOT EXISTS members (org TEXT, id INTEGER, login TEXT, avatar_url TEXT, type TEXT, PRIMARY KEY(id))')
   dbDashZero.run('CREATE TABLE IF NOT EXISTS milestones (org TEXT, repository TEXT, id INTEGER, title TEXT, state TEXT, open_issues INTEGER, due_on TEXT, html_url TEXT, url TEXT, PRIMARY KEY(id))')
   dbDashZero.run('CREATE TABLE IF NOT EXISTS labels (org TEXT, repository TEXT, name TEXT, url TEXT, PRIMARY KEY(url))')
-  callback()
+  callback(null, 'Success: tables created')
 }
 
 // ********************************
