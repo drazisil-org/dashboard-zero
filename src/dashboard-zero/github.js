@@ -80,8 +80,14 @@ function getRepoIssues (callback) {
   // console.info('Fetching issues for ' + REPO_LIST[repo_index].repo)
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
+  var user = ''
+  if (REPO_LIST[repo_index].org) {
+    user = REPO_LIST[repo_index].org
+  } else {
+    user = REPO_LIST[repo_index].user
+  }
   var msg = {
-    user: REPO_LIST[repo_index].org,
+    user: user,
     repo: REPO_LIST[repo_index].repo,
     per_page: 100
   }
@@ -204,8 +210,14 @@ function getRepoMilestones (callback) {
   // console.info('Fetching milestones for ' + REPO_LIST[repo_index].repo)
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
+  var user = ''
+  if (REPO_LIST[repo_index].org) {
+    user = REPO_LIST[repo_index].org
+  } else {
+    user = REPO_LIST[repo_index].user
+  }
   var msg = {
-    user: REPO_LIST[repo_index].org,
+    user: user,
     repo: REPO_LIST[repo_index].repo,
     per_page: 100
   }
@@ -305,8 +317,14 @@ function getRepoLabels (callback) {
   // console.info('Fetching labels for ' + REPO_LIST[repo_index].repo)
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
+  var user = ''
+  if (REPO_LIST[repo_index].org) {
+    user = REPO_LIST[repo_index].org
+  } else {
+    user = REPO_LIST[repo_index].user
+  }
   var msg = {
-    user: REPO_LIST[repo_index].org,
+    user: user,
     repo: REPO_LIST[repo_index].repo,
     per_page: 100
   }
@@ -392,8 +410,20 @@ function getSelectedLabelValues (ghRes) {
 
 function getCommentsFromIssue (issue_id) {
   // console.info('Fetching issue comments for ' + REPO_LIST[repo_index].repo)
+  var user = ''
+  if (REPO_LIST[repo_index].org) {
+    user = REPO_LIST[repo_index].org
+  } else {
+    user = REPO_LIST[repo_index].user
+  }
+  var msg = {
+    user: user,
+    repo: REPO_LIST[repo_index].repo,
+    number: issue_id,
+    per_page: 100
+  }
 
-  github.issues.getComments({'user': REPO_LIST[repo_index].org, 'repo': REPO_LIST[repo_index].repo, 'number': issue_id, 'per_page': 100}, function cb_get_comments_from_issue (err, res) {
+  github.issues.getComments(msg, function cb_get_comments_from_issue (err, res) {
     var status = fetchIssueComments(err, processIssueComments(err, res))
     if (status === '504: Gateway Timeout') {
       console.log(status + ': Retrying...')
@@ -487,55 +517,124 @@ function getOrgMembers (callback) {
   var githubClient = github
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
-  var msg = {
-    org: REPO_LIST[repo_index].org,
-    type: 'public',
-    per_page: 100
+  var msg
+  var type = 'org'
+  if (REPO_LIST[repo_index].org) {
+    msg = {
+      org: REPO_LIST[repo_index].org,
+      type: 'public',
+      per_page: 100
+    }
+  } else {
+    msg = {
+      user: REPO_LIST[repo_index].user,
+      repo: REPO_LIST[repo_index].repo,
+      per_page: 100
+    }
+    type = 'user'
   }
 
-  // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
-  github.orgs.getMembers(msg, function gotFromOrg (err, res) {
-    if (err) {
-      console.trace()
-      throw err
-    }
-    // this has loaded the first page of results
-    // get the values we want out of this response
-    getSelectedMemberValues(res)
+  if (type === 'org') {
+    // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
+    github.orgs.getMembers(msg, function gotMembersFromOrg (err, res) {
+      if (err) {
+        console.trace()
+        throw err
+      }
+      // this has loaded the first page of results
+      // get the values we want out of this response
+      getSelectedMemberValues(res)
 
-    // setup variables to use in the whilst loop below
-    var ghResult = res
-    var hasNextPage = truthy(githubClient.hasNextPage(res))
+      // setup variables to use in the whilst loop below
+      var ghResult = res
+      var hasNextPage = truthy(githubClient.hasNextPage(res))
 
-    // now we work through any remaining pages
-    async.whilst(
-      function test () {
-        return hasNextPage
-      },
-      function doThis (callback) {
-        githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
+      // now we work through any remaining pages
+      async.whilst(
+        function test () {
+          return hasNextPage
+        },
+        function doThis (callback) {
+          githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
+            if (err) {
+              console.trace()
+              throw err
+            }
+            // get the values we want out of this response
+            getSelectedMemberValues(res)
+
+            // update the variables used in the whilst logic
+            ghResult = res
+            hasNextPage = truthy(githubClient.hasNextPage(res))
+
+            callback(null)
+          })
+        },
+        function done (err) {
           if (err) {
             console.trace()
             throw err
           }
-          // get the values we want out of this response
-          getSelectedMemberValues(res)
-
-          // update the variables used in the whilst logic
-          ghResult = res
-          hasNextPage = truthy(githubClient.hasNextPage(res))
-
-          callback(null)
+          if (repo_index < (REPO_LIST.length - 1)) {
+            repo_index++
+            getOrgMembers(callback)
+          } else {
+            repo_index = 0
+            callback()
+          }
         })
-      },
-      function done (err) {
-        if (err) {
-          console.trace()
-          throw err
-        }
-        callback()
-      })
-  })
+    })
+  } else {
+    // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
+    github.repos.getContributors(msg, function gotMembersFromRepo (err, res) {
+      if (err) {
+        console.trace()
+        throw err
+      }
+      // this has loaded the first page of results
+      // get the values we want out of this response
+      getSelectedMemberValues(res)
+
+      // setup variables to use in the whilst loop below
+      var ghResult = res
+      var hasNextPage = truthy(githubClient.hasNextPage(res))
+
+      // now we work through any remaining pages
+      async.whilst(
+        function test () {
+          return hasNextPage
+        },
+        function doThis (callback) {
+          githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
+            if (err) {
+              console.trace()
+              throw err
+            }
+            // get the values we want out of this response
+            getSelectedMemberValues(res)
+
+            // update the variables used in the whilst logic
+            ghResult = res
+            hasNextPage = truthy(githubClient.hasNextPage(res))
+
+            callback(null)
+          })
+        },
+        function done (err) {
+          if (err) {
+            console.trace()
+            throw err
+          }
+          if (repo_index < (REPO_LIST.length - 1)) {
+            repo_index++
+            getOrgMembers(callback)
+          } else {
+            repo_index = 0
+            callback()
+          }
+        })
+    })
+  }
 }
 
 /**
@@ -546,8 +645,14 @@ function getOrgMembers (callback) {
 function getSelectedMemberValues (ghRes) {
   if (ghRes) {
     ghRes.forEach(function fe_repo (element, index, array) {
+      var user = ''
+      if (REPO_LIST[repo_index].org) {
+        user = REPO_LIST[repo_index].org
+      } else {
+        user = REPO_LIST[repo_index].user
+      }
       var member_line = {
-        'org': REPO_LIST[repo_index].org,
+        'org': user,
         'id': element.id,
         'login': element.login,
         'due_on': element.due_on,
