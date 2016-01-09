@@ -20,7 +20,7 @@ describe('API', function () {
   })
 
   it('can fetch all comments', function (done) {
-    dz.apiAllComments(true, function (err, res) {
+    dz.apiAllComments(false, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
@@ -32,12 +32,12 @@ describe('API', function () {
   })
 
   it('Ccan export all comments', function (done) {
-    dz.apiAllComments(false, function (err, res) {
+    dz.apiAllComments(true, function (err, res) {
       if (err) {
         assert.equal('ENOENT', err.message)
         done()
       } else {
-        assert.equal(true, res)
+        assert.equal('Export not supported yet', res)
         done()
       }
     })
