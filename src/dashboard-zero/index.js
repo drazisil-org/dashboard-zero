@@ -51,17 +51,16 @@ function startServer () {
     next()
   })
   app.get('/api/all/comments', function (req, res) {
-      var isExport = false
-      if (req.query.export) {
-        isExport = true
+    var isExport = false
+    if (req.query.export) {
+      isExport = true
+    }
+    apiAllComments(isExport, function (err, res) {
+      if (err) {
+        console.error(err.message)
+        logger.error(err.message)
       }
-      apiAllComments(isExport, function (err, res) {
-        if (err) {
-          console.error(err.message)
-          logger.error(err.message)
-        }
-        res.send(rows)
-      })
+      res.send(rows)
     })
   })
   app.get('/api/all/issues', function (req, res) {
