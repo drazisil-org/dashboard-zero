@@ -406,5 +406,6 @@ module.exports = {
   updateData: updateData,
   startServer: startServer,
   timerId: timerId,
-  apiAllComments: apiAllComments
+  apiAllComments: apiAllComments,
+  dbCreateTables: dbCreateTables
 }
