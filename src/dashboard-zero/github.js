@@ -437,8 +437,12 @@ function getCommentsFromIssue (issue_id) {
 
 function fetchIssueComments (err, res) {
   if (err) {
-    console.trace()
-    throw err
+    if (err.message === '504: Gateway Timeout') {
+      return err.message
+    } else {
+      console.trace()
+      throw err
+    }
   }
   if (github.hasNextPage(res)) {
     github.getNextPage(res, function cb_fetch_issue_comments (err, res) {
@@ -455,13 +459,13 @@ function processIssueComments (err, res) {
       console.log('Done with this repo')
       return 'Done with this repo'
     } else if (err.message === '504: Gateway Timeout') {
-      return err.message
+      return err
     } else if (err.message === 'Not Found') {
-      return err.message
+      return err
     } else {
       // Why does this error?
       console.trace()
-      throw err
+      return err
     }
   }
   res.forEach(function fe_repo (element, index, array) {
@@ -488,6 +492,8 @@ function processIssueCommentsPage (err, res) {
     if (err === 'No more pages') {
       // We are done with this repo
       return
+    } else if (err.message === '504: Gateway Timeout') {
+        processIssueCommentsPage(err.message)
     } else {
       console.trace()
       throw err
