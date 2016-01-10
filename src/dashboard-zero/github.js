@@ -53,11 +53,16 @@ function setToken (callback) {
 
     github.misc.rateLimit({}, function cb_rateLimit (err, res) {
       if (err) {
-        console.trace()
-        throw err
+        if (err.message === '504: Gateway Timeout') {
+          setToken(callback)
+        } else {
+          console.trace()
+          throw err
+        }
+      } else {
+        // console.info('GitHub Login: Success')
+        callback()
       }
-      // console.info('GitHub Login: Success')
-      callback()
     })
   } else {
     logger.error('GetHub Login: No Token')
@@ -493,7 +498,7 @@ function processIssueCommentsPage (err, res) {
       // We are done with this repo
       return
     } else if (err.message === '504: Gateway Timeout') {
-        processIssueCommentsPage(err.message)
+      processIssueCommentsPage(err.message)
     } else {
       console.trace()
       throw err
