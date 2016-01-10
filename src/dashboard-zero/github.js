@@ -444,6 +444,8 @@ function fetchIssueComments (err, res) {
   if (err) {
     if (err.message === '504: Gateway Timeout') {
       return err.message
+    } else if (err.message === 'Not Found') {
+      return err.message
     } else {
       console.trace()
       throw err
