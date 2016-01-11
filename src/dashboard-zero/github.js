@@ -436,6 +436,10 @@ function getCommentsFromIssue (issue_id) {
     } else if (status === 'Not Found') {
       console.error('Unable to fetch issue comments for issue id: ' + issue_id + ' in repository ' + REPO_LIST[repo_index].repo)
       process.exit(1)
+    } else {
+      console.error('Unknown error: ' + status)
+      console.trace()
+      process.exit(1)
     }
   })
 }
@@ -447,8 +451,7 @@ function fetchIssueComments (err, res) {
     } else if (err.message === 'Not Found') {
       return err.message
     } else {
-      console.trace()
-      throw err
+      throw err.message
     }
   }
   if (github.hasNextPage(res)) {
