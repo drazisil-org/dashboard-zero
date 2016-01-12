@@ -1,4 +1,5 @@
 var async = require('async')
+var VError = require('verror')
 var GitHubApi = require('github')
 
 var logger
@@ -57,7 +58,7 @@ function setToken (callback) {
           setToken(callback)
         } else {
           console.trace()
-          throw err
+          throw new VError(err, 'Unknown error setting github api token')
         }
       } else {
         // console.info('GitHub Login: Success')
@@ -101,7 +102,7 @@ function getRepoIssues (callback) {
   github.issues.repoIssues(msg, function gotFromOrg (err, res) {
     if (err) {
       console.trace()
-      throw err
+      throw new VError(err, 'Unnknown error getting issues from repo')
     }
     // this has loaded the first page of results
     // get the values we want out of this response
@@ -120,7 +121,7 @@ function getRepoIssues (callback) {
         githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
           if (err) {
             console.trace()
-            throw err
+            throw new VError(err, 'Unknown error checking next page of issues from repo')
           }
           // get the values we want out of this response
           getSelectedIssueValues(res)
@@ -135,7 +136,7 @@ function getRepoIssues (callback) {
       function done (err) {
         if (err) {
           console.trace()
-          throw err
+          throw new VError(err, 'Unknown error fetching page of issues from repo')
         }
         if (repo_index < (REPO_LIST.length - 1)) {
           repo_index++
@@ -231,7 +232,7 @@ function getRepoMilestones (callback) {
   github.issues.getAllMilestones(msg, function gotFromOrg (err, res) {
     if (err) {
       console.trace()
-      throw err
+      throw new VError(err, 'Unknown error getting milestones from repo')
     }
     // this has loaded the first page of results
     // get the values we want out of this response
@@ -250,7 +251,7 @@ function getRepoMilestones (callback) {
         githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
           if (err) {
             console.trace()
-            throw err
+            throw new VError(err, 'Unknwon error check for next page of milestones from repo')
           }
           // get the values we want out of this response
           getSelectedMilestoneValues(res)
@@ -265,7 +266,7 @@ function getRepoMilestones (callback) {
       function done (err) {
         if (err) {
           console.trace()
-          throw err
+          throw new VError(err, 'unknown error fetching milestones from repo')
         }
         if (repo_index < (REPO_LIST.length - 1)) {
           repo_index++
@@ -338,7 +339,7 @@ function getRepoLabels (callback) {
   github.issues.getLabels(msg, function gotFromOrg (err, res) {
     if (err) {
       console.trace()
-      throw err
+      throw new VError(err, 'unknown error getting labels from repo')
     }
     // this has loaded the first page of results
     // get the values we want out of this response
@@ -357,7 +358,7 @@ function getRepoLabels (callback) {
         githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
           if (err) {
             console.trace()
-            throw err
+            throw new VError(err, 'unknown error checking for next page of labels from repo')
           }
           // get the values we want out of this response
           getSelectedMilestoneValues(res)
@@ -372,7 +373,7 @@ function getRepoLabels (callback) {
       function done (err) {
         if (err) {
           console.trace()
-          throw err
+          throw new VError(err, 'unknown error fetching page of labels from repo')
         }
         if (repo_index < (REPO_LIST.length - 1)) {
           repo_index++
@@ -436,10 +437,6 @@ function getCommentsFromIssue (issue_id) {
     } else if (status === 'Not Found') {
       console.error('Unable to fetch issue comments for issue id: ' + issue_id + ' in repository ' + REPO_LIST[repo_index].repo)
       process.exit(1)
-    } else {
-      console.error('Unknown error: ' + status)
-      console.trace()
-      process.exit(1)
     }
   })
 }
@@ -451,7 +448,8 @@ function fetchIssueComments (err, res) {
     } else if (err.message === 'Not Found') {
       return err.message
     } else {
-      throw err.message
+      console.error(err.message)
+      process.exit(1)
     }
   }
   if (github.hasNextPage(res)) {
@@ -470,12 +468,13 @@ function processIssueComments (err, res) {
       return 'Done with this repo'
     } else if (err.message === '504: Gateway Timeout') {
       return err
-    } else if (err.message === 'Not Found') {
+    } else if (err.message.message === 'Not Found') {
       return err
     } else {
       // Why does this error?
+      console.dir(err)
       console.trace()
-      return err
+      process.exit(1)
     }
   }
   res.forEach(function fe_repo (element, index, array) {
@@ -506,7 +505,7 @@ function processIssueCommentsPage (err, res) {
       processIssueCommentsPage(err.message)
     } else {
       console.trace()
-      throw err
+      throw new VError(err, 'unknown error processing issue comments from repo')
     }
   } else {
     if (github.hasNextPage(res)) {
@@ -555,7 +554,7 @@ function getOrgMembers (callback) {
     github.orgs.getMembers(msg, function gotMembersFromOrg (err, res) {
       if (err) {
         console.trace()
-        throw err
+        throw new VError(err, 'unknown error getting members from org')
       }
       // this has loaded the first page of results
       // get the values we want out of this response
@@ -574,7 +573,7 @@ function getOrgMembers (callback) {
           githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
             if (err) {
               console.trace()
-              throw err
+              throw new VError(err, 'unknown error checking for next page of members from org')
             }
             // get the values we want out of this response
             getSelectedMemberValues(res)
@@ -589,7 +588,7 @@ function getOrgMembers (callback) {
         function done (err) {
           if (err) {
             console.trace()
-            throw err
+            throw new VError(err, 'unknown error fetching list if members from org')
           }
           if (repo_index < (REPO_LIST.length - 1)) {
             repo_index++
@@ -605,7 +604,7 @@ function getOrgMembers (callback) {
     github.repos.getContributors(msg, function gotMembersFromRepo (err, res) {
       if (err) {
         console.trace()
-        throw err
+        throw new VError(err, 'unknown error getting list of contributors from repo')
       }
       // this has loaded the first page of results
       // get the values we want out of this response
@@ -624,7 +623,7 @@ function getOrgMembers (callback) {
           githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
             if (err) {
               console.trace()
-              throw err
+              throw new VError(err, 'unknown error checking for next page of contributors from repo')
             }
             // get the values we want out of this response
             getSelectedMemberValues(res)
@@ -639,7 +638,7 @@ function getOrgMembers (callback) {
         function done (err) {
           if (err) {
             console.trace()
-            throw err
+            throw new VError(err, 'unknown error fetching contributors from repo')
           }
           if (repo_index < (REPO_LIST.length - 1)) {
             repo_index++
@@ -689,7 +688,7 @@ function getRateLeft (callback) {
   github.misc.rateLimit({}, function cb_rateLimit (err, res) {
     if (err) {
       console.trace()
-      throw err
+      throw new VError(err, 'unknown error fetching number of api calls left')
     }
     callback(res.rate.remaining + ' calls remaining, resets at ' + new Date(res.rate.reset * 1000))
   })
