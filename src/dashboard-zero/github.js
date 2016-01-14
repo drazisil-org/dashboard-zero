@@ -92,9 +92,10 @@ function getRepoIssues (callback) {
   } else {
     user = REPO_LIST[repo_index].user
   }
+  var repo = REPO_LIST[repo_index].repo
   var msg = {
     user: user,
-    repo: REPO_LIST[repo_index].repo,
+    repo: repo,
     per_page: 100
   }
 
@@ -102,11 +103,11 @@ function getRepoIssues (callback) {
   github.issues.repoIssues(msg, function gotFromOrg (err, res) {
     if (err) {
       console.trace()
-      throw new VError(err, 'Unnknown error getting issues from repo')
+      throw new VError(err, 'unnknown error getting issues from repo')
     }
     // this has loaded the first page of results
     // get the values we want out of this response
-    getSelectedIssueValues(res)
+    getSelectedIssueValues(user, repo, res)
 
     // setup variables to use in the whilst loop below
     var ghResult = res
@@ -121,10 +122,10 @@ function getRepoIssues (callback) {
         githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
           if (err) {
             console.trace()
-            throw new VError(err, 'Unknown error checking next page of issues from repo')
+            throw new VError(err, 'unknown error checking next page of issues from repo')
           }
           // get the values we want out of this response
-          getSelectedIssueValues(res)
+          getSelectedIssueValues(user, repo, res)
 
           // update the variables used in the whilst logic
           ghResult = res
@@ -136,7 +137,7 @@ function getRepoIssues (callback) {
       function done (err) {
         if (err) {
           console.trace()
-          throw new VError(err, 'Unknown error fetching page of issues from repo')
+          throw new VError(err, 'unknown error fetching page of issues from repo')
         }
         if (repo_index < (REPO_LIST.length - 1)) {
           repo_index++
@@ -154,7 +155,7 @@ function getRepoIssues (callback) {
  * @param  {JSON} ghRes, a single respsonse from the github API
  * @return {Array}
  */
-function getSelectedIssueValues (ghRes) {
+function getSelectedIssueValues (user, repo, ghRes) {
   if (ghRes) {
     ghRes.forEach(function fe_repo (element, index, array) {
       // Check if PR
@@ -175,8 +176,8 @@ function getSelectedIssueValues (ghRes) {
         labels = arrLabels.join('|')
       }
       var issue_line = {
-        'org': REPO_LIST[repo_index].org,
-        'repository': REPO_LIST[repo_index].repo,
+        'org': user,
+        'repository': repo,
         'id': element.id,
         'title': element.title.replace(/"/g, '&quot;'),
         'created_at': element.created_at,
@@ -193,7 +194,7 @@ function getSelectedIssueValues (ghRes) {
       json_issues.push(issue_line)
 
       // Process comments
-      getCommentsFromIssue(element.number)
+      getCommentsFromIssue(user, repo, element.number)
 
       total_issues++
     })
@@ -232,7 +233,7 @@ function getRepoMilestones (callback) {
   github.issues.getAllMilestones(msg, function gotFromOrg (err, res) {
     if (err) {
       console.trace()
-      throw new VError(err, 'Unknown error getting milestones from repo')
+      throw new VError(err, 'unknown error getting milestones from repo')
     }
     // this has loaded the first page of results
     // get the values we want out of this response
@@ -251,7 +252,7 @@ function getRepoMilestones (callback) {
         githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
           if (err) {
             console.trace()
-            throw new VError(err, 'Unknwon error check for next page of milestones from repo')
+            throw new VError(err, 'unknown error check for next page of milestones from repo')
           }
           // get the values we want out of this response
           getSelectedMilestoneValues(res)
@@ -414,42 +415,39 @@ function getSelectedLabelValues (ghRes) {
 // COMMENTS
 // ********************************
 
-function getCommentsFromIssue (issue_id) {
+function getCommentsFromIssue (user, repo, issue_id) {
   // console.info('Fetching issue comments for ' + REPO_LIST[repo_index].repo)
-  var user = ''
-  if (REPO_LIST[repo_index].org) {
-    user = REPO_LIST[repo_index].org
-  } else {
-    user = REPO_LIST[repo_index].user
-  }
   var msg = {
     user: user,
-    repo: REPO_LIST[repo_index].repo,
+    repo: repo,
     number: issue_id,
     per_page: 100
   }
 
   github.issues.getComments(msg, function cb_get_comments_from_issue (err, res) {
-    var status = fetchIssueComments(err, processIssueComments(err, res))
-    if (status === '504: Gateway Timeout') {
-      console.log(status + ': Retrying...')
-      getCommentsFromIssue(issue_id)
-    } else if (status === 'Not Found') {
-      console.error('Unable to fetch issue comments for issue id: ' + issue_id + ' in repository ' + REPO_LIST[repo_index].repo)
-      process.exit(1)
+    try {
+      fetchIssueComments(err, processIssueComments(err, res))
+    } catch (e) {
+      if (e.message === '504: Gateway Timeout') {
+        console.log(e.message + ': Retrying...')
+        getCommentsFromIssue(user, repo, issue_id)
+      } else if (e.message === 'Not Found') {
+        throw new VError(e, 'Unable to fetch issue comments for issue id: ' + issue_id + ' in repository ' + user + '/' + repo)
+      } else {
+        console.log(e)
+        throw new VError(e, 'unknown error fetching comments')
+      }
     }
   })
 }
 
 function fetchIssueComments (err, res) {
   if (err) {
-    if (err.message === '504: Gateway Timeout') {
-      return err.message
-    } else if (err.message === 'Not Found') {
-      return err.message
+    if (err.message === '{"message":"Not Found","documentation_url":"https://developer.github.com/v3"}') {
+      throw new VError('Not Found')
     } else {
-      console.error(err.message)
-      process.exit(1)
+      console.log('Error x: =' + err.message + '=')
+      throw new VError(err)
     }
   }
   if (github.hasNextPage(res)) {
@@ -468,13 +466,11 @@ function processIssueComments (err, res) {
       return 'Done with this repo'
     } else if (err.message === '504: Gateway Timeout') {
       return err
-    } else if (err.message.message === 'Not Found') {
+    } else if (err.message === 'Not Found') {
       return err
     } else {
       // Why does this error?
-      console.dir(err)
-      console.trace()
-      process.exit(1)
+      return new VError(err, 'unknown error processing issue comments')
     }
   }
   res.forEach(function fe_repo (element, index, array) {
