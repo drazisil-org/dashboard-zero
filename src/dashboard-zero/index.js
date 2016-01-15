@@ -77,7 +77,7 @@ function startServer () {
     })
   })
   app.get('/api/all/issues/untouched', function (req, res) {
-    var sql = 'SELECT * FROM issues WHERE comments_count = 0 AND labels = "none" and milestone_id = "none"'
+    var sql = 'SELECT * FROM issues WHERE comments_count = 0 AND labels = "none"  and milestone_id = "none"'
     dbFetchAll(sql, function cb_db_fetch_issues_untouched (err, rows) {
       if (err) {
         console.error(err.message)
@@ -194,53 +194,63 @@ function dbFetchAll (sql, callback) {
 
 function dbUpdateComments (callback) {
   console.info('Saving issue comments to database...')
-  var stmt = dbDashZero.prepare('REPLACE INTO comments   (org,repository,id,creator,updated_date,html_url,issue_url) VALUES (?,?,?,?,?,?,?)')
-  gh.json_comments.forEach(function fe_db_comments (element, index, array) {
-    var e = element
-    stmt.run(e.org, e.repository, e.id, e.creator, e.updated_date, e.html_url, e.issue_url)
-  })
-  stmt.finalize(callback)
-}
-
-function dbUpdateIssues (callback) {
-  console.info('Saving issues to database...')
-  var stmt = dbDashZero.prepare('REPLACE INTO issues   (org,repository,title,created_date,comments_count,is_pullrequest,milestone_id,labels,html_url,url) VALUES (?,?,?,?,?,?,?,?,?,?)')
-  gh.json_issues.forEach(function fe_db_issues (element, index, array) {
-    var e = element
-    stmt.run(e.org, e.repository, e.title, e.created_at, e.comments, e.is_pullrequest, e.milestone_id, e.labels, e.html_url, e.url)
-  })
-  stmt.finalize(callback)
-}
-
-function dbUpdateMembers (callback) {
-  console.info('Saving members to database...')
-  var stmt = dbDashZero.prepare('REPLACE INTO members (org,id,login,avatar_url,type) VALUES (?,?,?,?,?)', function done () {
-    gh.json_members.forEach(function fe_db_members (element, index, array) {
+  dbDashZero.run('DELETE FROM comments', function done () {
+    var stmt = dbDashZero.prepare('REPLACE INTO comments   (org,repository,id,creator,updated_date,html_url,issue_url) VALUES (?,?,?,?,?,?,?)')
+    gh.json_comments.forEach(function fe_db_comments (element, index, array) {
       var e = element
-      stmt.run(e.org, e.id, e.login, e.avatar_url, e.type)
+      stmt.run(e.org, e.repository, e.id, e.creator, e.updated_date, e.html_url, e.issue_url)
     })
     stmt.finalize(callback)
   })
 }
 
+function dbUpdateIssues (callback) {
+  console.info('Saving issues to database...')
+  dbDashZero.run('DELETE FROM issues', function done () {
+    var stmt = dbDashZero.prepare('REPLACE INTO issues   (org,repository,title,created_date,comments_count,is_pullrequest,state,milestone_id,labels,html_url,url) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+    gh.json_issues.forEach(function fe_db_issues (element, index, array) {
+      var e = element
+      stmt.run(e.org, e.repository, e.title, e.created_at, e.comments, e.is_pullrequest, e.state, e.milestone_id, e.labels, e.html_url, e.url)
+    })
+    stmt.finalize(callback)
+  })
+}
+
+function dbUpdateMembers (callback) {
+  console.info('Saving members to database...')
+  dbDashZero.run('DELETE FROM members', function done () {
+    var stmt = dbDashZero.prepare('REPLACE INTO members (org,id,login,avatar_url,type) VALUES (?,?,?,?,?)', function done () {
+      gh.json_members.forEach(function fe_db_members (element, index, array) {
+        var e = element
+        stmt.run(e.org, e.id, e.login, e.avatar_url, e.type)
+      })
+      stmt.finalize(callback)
+    })
+  })
+}
+
 function dbUpdateMilestones (callback) {
   console.info('Saving milestones to database...')
-  var stmt = dbDashZero.prepare('REPLACE INTO milestones (org,repository,id,title,state,open_issues,due_on,html_url,url) VALUES (?,?,?,?,?,?,?,?,?)')
-  gh.json_milestones.forEach(function fe_db_milestones (element, index, array) {
-    var e = element
-    stmt.run(e.org, e.repository, e.id, e.title, e.state, e.open_issues, e.due_on, e.html_url, e.url)
+  dbDashZero.run('DELETE FROM milestones', function done () {
+    var stmt = dbDashZero.prepare('REPLACE INTO milestones (org,repository,id,title,state,open_issues,due_on,html_url,url) VALUES (?,?,?,?,?,?,?,?,?)')
+    gh.json_milestones.forEach(function fe_db_milestones (element, index, array) {
+      var e = element
+      stmt.run(e.org, e.repository, e.id, e.title, e.state, e.open_issues, e.due_on, e.html_url, e.url)
+    })
+    stmt.finalize(callback)
   })
-  stmt.finalize(callback)
 }
 
 function dbUpdateLabels (callback) {
   console.info('Saving labels to database...')
-  var stmt = dbDashZero.prepare('REPLACE INTO labels (org,repository,name,url) VALUES (?,?,?,?)')
-  gh.json_labels.forEach(function fe_db_labels (element, index, array) {
-    var e = element
-    stmt.run(e.org, e.repository, e.name, e.url)
+  dbDashZero.run('DELETE FROM labels', function done () {
+    var stmt = dbDashZero.prepare('REPLACE INTO labels (org,repository,name,url) VALUES (?,?,?,?)')
+    gh.json_labels.forEach(function fe_db_labels (element, index, array) {
+      var e = element
+      stmt.run(e.org, e.repository, e.name, e.url)
+    })
+    stmt.finalize(callback)
   })
-  stmt.finalize(callback)
 }
 
 function dbUpdateStats (callback) {
@@ -264,7 +274,7 @@ function dbUpdateStats (callback) {
 
 function dbCreateTables (callback) {
   dbDashZero.run('CREATE TABLE IF NOT EXISTS comments (org TEXT, repository TEXT, id INTEGER, creator TEXT, updated_date TEXT, html_url TEXT, issue_url TEXT, PRIMARY KEY(id))')
-  dbDashZero.run('CREATE TABLE IF NOT EXISTS issues (org TEXT, repository TEXT, title TEXT, created_date TEXT, comments_count INTEGER, is_pullrequest TEXT, milestone_id TEXT, labels TEXT, html_url TEXT, url TEXT, PRIMARY KEY(url))')
+  dbDashZero.run('CREATE TABLE IF NOT EXISTS issues (org TEXT, repository TEXT, title TEXT, created_date TEXT, comments_count INTEGER, is_pullrequest TEXT, state TEXT, milestone_id TEXT, labels TEXT, html_url TEXT, url TEXT, PRIMARY KEY(url))')
   dbDashZero.run('CREATE TABLE IF NOT EXISTS members (org TEXT, id INTEGER, login TEXT, avatar_url TEXT, type TEXT, PRIMARY KEY(id))')
   dbDashZero.run('CREATE TABLE IF NOT EXISTS milestones (org TEXT, repository TEXT, id INTEGER, title TEXT, state TEXT, open_issues INTEGER, due_on TEXT, html_url TEXT, url TEXT, PRIMARY KEY(id))')
   dbDashZero.run('CREATE TABLE IF NOT EXISTS labels (org TEXT, repository TEXT, name TEXT, url TEXT, PRIMARY KEY(url))')
@@ -305,9 +315,11 @@ function saveAll (callback) {
 function checkDataFiles (callback) {
   var args = process.argv
   if (args[2] === 'rebuild') {
-    updateAll(function done () {
-      console.info('All files rebuilt')
-      callback()
+    dbCreateTables(function done () {
+      updateAll(function done () {
+        console.info('All files rebuilt')
+        callback()
+      })
     })
   } else if (args[2] === 'getRate') {
     gh.setToken(

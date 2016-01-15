@@ -2,6 +2,8 @@ var async = require('async')
 var VError = require('verror')
 var GitHubApi = require('github')
 
+var USER_AGENT = 'drazisil'
+
 var logger
 var github
 var REPO_LIST
@@ -35,7 +37,7 @@ function init (config, logger, callback) {
     pathPrefix: '', // for some GHEs; none for GitHub
     timeout: 5000,
     headers: {
-      'user-agent': 'drazisil' // GitHub is happy with a unique user agent
+      'user-agent': USER_AGENT // GitHub is happy with a unique user agent
     }
   })
   CONFIG = config
@@ -183,6 +185,7 @@ function getSelectedIssueValues (user, repo, ghRes) {
         'created_at': element.created_at,
         'updated_at': element.updated_at,
         'comments': element.comments,
+        'state': element.state,
         'is_pullrequest': is_pr,
         'milestone_id': milestone_id,
         'labels': labels,
@@ -433,6 +436,11 @@ function getCommentsFromIssue (user, repo, issue_id) {
         getCommentsFromIssue(user, repo, issue_id)
       } else if (e.message === 'Not Found') {
         throw new VError(e, 'Unable to fetch issue comments for issue id: ' + issue_id + ' in repository ' + user + '/' + repo)
+      } else if (e.message === 'API Rate Exceeded') {
+        console.error(e.message)
+        getRateLeft(function () {
+          process.exit(1)
+        })
       } else {
         console.log(e)
         throw new VError(e, 'unknown error fetching comments')
@@ -445,6 +453,8 @@ function fetchIssueComments (err, res) {
   if (err) {
     if (err.message === '{"message":"Not Found","documentation_url":"https://developer.github.com/v3"}') {
       throw new VError('Not Found')
+    } else if (err.message === '{"message":"API rate limit exceeded for ' + USER_AGENT + '.","documentation_url":"https://developer.github.com/v3/#rate-limiting"}') {
+      throw new VError('API Rate Exceeded')
     } else {
       console.log('Error x: =' + err.message + '=')
       throw new VError(err)
@@ -549,51 +559,57 @@ function getOrgMembers (callback) {
     // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
     github.orgs.getMembers(msg, function gotMembersFromOrg (err, res) {
       if (err) {
-        console.trace()
-        throw new VError(err, 'unknown error getting members from org')
-      }
-      // this has loaded the first page of results
-      // get the values we want out of this response
-      getSelectedMemberValues(res)
+        if (err.message === '{"message":"API rate limit exceeded for ' + USER_AGENT + '.","documentation_url":"https://developer.github.com/v3/#rate-limiting"}') {
+          console.error('API Rate Exceeded')
+          module.exports.getRateLeft(process.exit(1))
+        } else {
+          console.trace()
+          throw new VError(err, 'unknown error getting members from org')
+        }
+      } else {
+        // this has loaded the first page of results
+        // get the values we want out of this response
+        getSelectedMemberValues(res)
 
-      // setup variables to use in the whilst loop below
-      var ghResult = res
-      var hasNextPage = truthy(githubClient.hasNextPage(res))
+        // setup variables to use in the whilst loop below
+        var ghResult = res
+        var hasNextPage = truthy(githubClient.hasNextPage(res))
 
-      // now we work through any remaining pages
-      async.whilst(
-        function test () {
-          return hasNextPage
-        },
-        function doThis (callback) {
-          githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
+        // now we work through any remaining pages
+        async.whilst(
+          function test () {
+            return hasNextPage
+          },
+          function doThis (callback) {
+            githubClient.getNextPage(ghResult, function gotNextPage (err, res) {
+              if (err) {
+                console.trace()
+                throw new VError(err, 'unknown error checking for next page of members from org')
+              }
+              // get the values we want out of this response
+              getSelectedMemberValues(res)
+
+              // update the variables used in the whilst logic
+              ghResult = res
+              hasNextPage = truthy(githubClient.hasNextPage(res))
+
+              callback(null)
+            })
+          },
+          function done (err) {
             if (err) {
               console.trace()
-              throw new VError(err, 'unknown error checking for next page of members from org')
+              throw new VError(err, 'unknown error fetching list if members from org')
             }
-            // get the values we want out of this response
-            getSelectedMemberValues(res)
-
-            // update the variables used in the whilst logic
-            ghResult = res
-            hasNextPage = truthy(githubClient.hasNextPage(res))
-
-            callback(null)
+            if (repo_index < (REPO_LIST.length - 1)) {
+              repo_index++
+              getOrgMembers(callback)
+            } else {
+              repo_index = 0
+              callback()
+            }
           })
-        },
-        function done (err) {
-          if (err) {
-            console.trace()
-            throw new VError(err, 'unknown error fetching list if members from org')
-          }
-          if (repo_index < (REPO_LIST.length - 1)) {
-            repo_index++
-            getOrgMembers(callback)
-          } else {
-            repo_index = 0
-            callback()
-          }
-        })
+      }
     })
   } else {
     // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
@@ -681,6 +697,7 @@ function getSelectedMemberValues (ghRes) {
 }
 
 function getRateLeft (callback) {
+  console.log('moo')
   github.misc.rateLimit({}, function cb_rateLimit (err, res) {
     if (err) {
       console.trace()
