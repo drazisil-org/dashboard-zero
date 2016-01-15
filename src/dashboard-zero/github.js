@@ -697,7 +697,6 @@ function getSelectedMemberValues (ghRes) {
 }
 
 function getRateLeft (callback) {
-  console.log('moo')
   github.misc.rateLimit({}, function cb_rateLimit (err, res) {
     if (err) {
       console.trace()
