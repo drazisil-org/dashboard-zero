@@ -300,6 +300,11 @@ function saveAll (callback) {
               total_milestones: gh.total_milestones,
               total_labels: gh.total_labels
             }
+            // gh.json_members = []
+            // gh.json_milestones = []
+            // gh.json_issues = []
+            // gh.json_comments = []
+            // gh.json_labels = []
             dbUpdateStats(callback)
           })
         })
@@ -316,7 +321,7 @@ function checkDataFiles (callback) {
   var args = process.argv
   if (args[2] === 'rebuild') {
     dbCreateTables(function done () {
-      updateAll(function done () {
+      updateData(true, function done () {
         console.info('All files rebuilt')
         callback()
       })
@@ -347,7 +352,7 @@ function checkDataFiles (callback) {
       if (err) {
         if (err.message === 'SQLITE_ERROR: no such table: stats') {
           dbCreateTables(function done () {
-            updateAll(function done () {
+            updateData(true, function done () {
               console.info('All files rebuilt')
               callback()
             })
@@ -363,27 +368,7 @@ function checkDataFiles (callback) {
   }
 }
 
-function updateAll (callback) {
-  gh.setToken(
-    function cb_setTokenIssues (status) {
-      gh.getOrgMembers(function done () {
-        gh.getRepoMilestones(function done () {
-          gh.getRepoLabels(function done () {
-            gh.getRepoIssues(function done () {
-              saveAll(function done () {
-                gh.getRateLeft(function done (rateLeft) {
-                  console.info(rateLeft)
-                  callback()
-                })
-              })
-            })
-          })
-        })
-      })
-    })
-}
-
-function updateData (callback) {
+function updateData (force, callback) {
   clearTimeout(timerId)
   gh.setToken(
     function cb_setTokenUpdateData (status) {
@@ -393,7 +378,7 @@ function updateData (callback) {
           console.error(err.message)
           logger.error(err.message)
         }
-        if (new Date() - new Date(Number(rows[0].last_updated)) > 1700000) {
+        if (new Date() - new Date(Number(rows[0].last_updated)) > 1700000 || force === true) {
           console.info('Updating data...')
           gh.getRepoMilestones(function done () {
             gh.getRepoLabels(function done () {
@@ -402,7 +387,7 @@ function updateData (callback) {
                   gh.getRateLeft(function done (rateLeft) {
                     console.info('Data updated: ' + new Date().toLocaleString())
                     console.info(rateLeft)
-                    timerId = setTimeout(updateData, 1800000, function done () { // 30 minutes
+                    timerId = setTimeout(updateData, 1800000, false, function done () { // 30 minutes
                     })
                     callback()
                   })
@@ -412,7 +397,7 @@ function updateData (callback) {
           })
         } else {
           console.log('Data not stale yet')
-          timerId = setTimeout(updateData, 1800000, function done () { // 30 minutes
+          timerId = setTimeout(updateData, 1800000, false, function done () { // 30 minutes
           })
           callback()
         }
