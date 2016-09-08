@@ -48,12 +48,11 @@ gulp.task('test', ['pre-test'], function (cb) {
   })) // stores reports in "coverage" directory
 })
 
-gulp.task('coveralls', function (cb) {
+gulp.task('coveralls', ['test'], function (cb) {
   return gulp.src(output_path + '/coverage/lcov.info')
   .pipe(coveralls())
 })
 
-// gulp.task('dev', ['isCircle', 'standard', 'test', 'coveralls'])
-gulp.task('dev', ['isCircle', 'standard', 'test'])
+gulp.task('dev', ['isCircle', 'standard', 'coveralls'])
 
 gulp.task('default', ['main'])
