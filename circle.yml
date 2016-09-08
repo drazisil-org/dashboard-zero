@@ -6,6 +6,11 @@ general:
   artifacts:
     - "coverage"
     - "docs"
+
+dependencies:
+  post:
+    - npm install sqlite3 --build-from-source
+
 test:
   pre:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit
