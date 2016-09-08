@@ -1,8 +1,5 @@
 /* global describe it */
-
-var Promise = require('bluebird')
 var fs = require('fs')
-Promise.promisifyAll(fs)
 
 var assert = require('assert')
 describe('Files', function () {

@@ -1,5 +1,5 @@
 var config = require('./config.json');
-var dz = require('./src/dashboard-zero/index.js')
+var dz = require('./src/index.js')
 
 // *******************************
 // Start of code
