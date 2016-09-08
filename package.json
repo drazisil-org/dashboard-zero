@@ -38,9 +38,7 @@
     "should": "~8.0.0",
     "bluebird": "^3.0.6",
     "coveralls": "^2.11.4",
-    "gulp": "^3.9.0",
     "nock": "^2.15.0",
-    "standard": "^5.3.1",
-    "docco": "^0.7.0"
+    "standard": "^5.3.1"
   }
 }
