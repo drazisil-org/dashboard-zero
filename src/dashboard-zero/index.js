@@ -3,7 +3,7 @@ var express = require('express')
 var app = express()
 var gh = require('./github.js')
 var sqlite3 = require('sqlite3').verbose()
-var logger = require('./logger.js')
+var logger = require('winston')
 // Database setup
 var dbDashZero = new sqlite3.Database('data/dash_zero.db')
 
@@ -54,7 +54,6 @@ function startServer () {
     var sql = 'SELECT * FROM comments'
     dbFetchAll(sql, function cb_db_fetch_comments (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -68,7 +67,6 @@ function startServer () {
     var sql = 'SELECT * FROM issues'
     dbFetchAll(sql, function cb_db_fetch_issues (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -82,7 +80,6 @@ function startServer () {
     var sql = 'SELECT * FROM issues WHERE comments_count = 0 AND labels = "none" and milestone_id = "none"'
     dbFetchAll(sql, function cb_db_fetch_issues_untouched (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -96,7 +93,6 @@ function startServer () {
     var sql = 'SELECT * FROM labels'
     dbFetchAll(sql, function cb_db_fetch_labels (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -110,7 +106,6 @@ function startServer () {
     var sql = 'SELECT * FROM members'
     dbFetchAll(sql, function cb_db_fetch_members (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -124,7 +119,6 @@ function startServer () {
     var sql = 'SELECT * FROM milestones'
     dbFetchAll(sql, function cb_db_fetch_milestones (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -138,7 +132,6 @@ function startServer () {
     var sql = 'SELECT * FROM stats'
     dbFetchAll(sql, function cb_db_fetch_stats (err, rows) {
       if (err) {
-        console.error(err.message)
         logger.error(err.message)
       }
       if (req.query.export) {
@@ -148,7 +141,7 @@ function startServer () {
       }
     })
   })
-  app.use(express.static(__dirname + '../../../public'))
+  app.use(express.static('public'))
 
   app.listen(SERVER_PORT)
   console.info('Server now running on http://localhost:' + SERVER_PORT)
