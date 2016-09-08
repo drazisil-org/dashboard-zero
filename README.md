@@ -7,6 +7,6 @@ This is a new project. Please jump into the [issues](https://github.com/drazisil
 
 ## History
 
-Initial concent from https://github.com/adamlofting/dashboard-zero, but the project fizzled. This is an attempt to get it restarted as a working OSS project.
+Initial concept from https://github.com/adamlofting/dashboard-zero, but the project fizzled. This is an attempt to get it restarted as a working OSS project.
 
 Git commit history retained for the record, but disconnected from upstream.
