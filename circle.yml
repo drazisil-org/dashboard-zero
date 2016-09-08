@@ -16,4 +16,3 @@ test:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit
   override:
     - istanbul cover --include-all-sources _mocha -- -R mocha-multi -O spec=-,xunit=$CIRCLE_TEST_REPORTS/junit/test-results.xml 'src/**/*.test.js' 
-    - docco src/**/*.js src/**/*.js
