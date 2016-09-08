@@ -30,3 +30,4 @@ junit
 .Rproj.user
 config.json
 dash_zero.db*
+.DS_Store

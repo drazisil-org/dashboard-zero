@@ -9,6 +9,12 @@ See [configuration](./configuration.md)
 npm start
 ````
 
+### Accessing externally
+
+```
+./ngrok http 127.0.0.1:<port>
+```
+
 ### Rebuilding the full database
 
 ````
