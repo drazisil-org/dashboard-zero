@@ -1,9 +1,15 @@
 machine:
   node:
     version: 6.2.1
+
+general:
+  artifacts:
+    - "coverage"
+    - "docs"
 test:
-  override:
+  pre:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit
+  override:
     - mocha -R mocha-multi -O spec=-,xunit=$CIRCLE_TEST_REPORTS/junit/test-results.xml
-    - npm run coverage
-    - cp -R coverage $CIRCLE_ARTIFACTS/coverage
+    - istanbul cover ./node_modules/mocha/bin/_mocha
+    - docco src/**/*.js src/**/**/*.js

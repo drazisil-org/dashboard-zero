@@ -1,4 +1,5 @@
 /* global describe it */
+var index = require('./index.js')
 var fs = require('fs')
 
 var assert = require('assert')
