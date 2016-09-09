@@ -1,0 +1,26 @@
+version: '2'
+services:
+  postgres:
+      image: postgres:9.4.1
+      environment:
+          POSTGRES_USER: root
+      network_mode: "service:backend"
+
+  redis:
+      image: redis:2.8.19
+      network_mode: "service:backend"
+
+  backend:
+      container_name: dashboardzero
+      build: .
+      volumes:
+          # for docker
+          - /var/run/docker.sock:/var/run/docker.sock
+      environment:
+          CIRCLE_ENV: development
+          CIRCLE_CONTAINER_TYPE: docker
+          CIRCLE_NUM_CONTAINERS: "2"
+          CIRCLE_DOCKER_NETWORK: "circle_default"
+          CIRCLE_RELOAD_NAMESPACES_ON_API_CALL: "false"
+      ports:
+          - "8080:8080"

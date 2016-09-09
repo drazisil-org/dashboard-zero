@@ -1,7 +1,7 @@
 {
   "name": "dashboard-zero",
   "version": "1.0.0",
-  "description": "",
+  "description": "Getting the numbers we care about to zero",
   "main": "index.js",
   "scripts": {
     "getRate": "node server.js getRate",
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/drazisil/dashboard-zero.git"
   },
   "author": "",
-  "license": "MPL",
+  "license": "MPL-2.0",
   "dependencies": {
     "async": "^1.5.0",
     "csv": "^0.4.6",
