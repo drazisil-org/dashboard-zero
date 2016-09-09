@@ -1,9 +1,16 @@
-var config = require('./config.json');
+var config = require('./config.json')
 var dz = require('./src/index.js')
+var fs = require('fs')
+var logger = require('winston')
 
 // *******************************
 // Start of code
 // ****************************
+
+if (!config.configured) {
+  logger.info('Please configure the application')
+  process.exit()
+}
 
 POST()
 
@@ -17,4 +24,11 @@ function POST () {
       })
     })
   })
+}
+
+function isConfigured (config, config_file_path) {
+  if (!config.configured) {
+    config.configured = true
+    fs.writeFileSync(config_file_path, JSON.stringify(config, null, 2))
+  }
 }

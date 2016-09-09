@@ -5,6 +5,7 @@ OAuth2 Token: https://developer.github.com/v3/#authentication
 
 ````
 {
+  "configured": true
   "token": "<github api token>",
   "server_port": "<server port>" (default: 3000)
   "repo_list": [{
