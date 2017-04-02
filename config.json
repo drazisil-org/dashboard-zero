@@ -1,0 +1,14 @@
+{
+  "token": "xxx",
+  "server_port": 3000,
+  "repo_list": [{
+    "org": "xxx",
+    "repo": "yyy"
+  }, {
+    "org": "xxx",
+    "repo": "yyy"
+  }, {
+    "org": "xxx",
+    "repo": "yyy"
+  }]
+}
