@@ -489,8 +489,14 @@ function getOrgMembers (callback) {
   // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
   github.orgs.getMembers(msg, function gotFromOrg (err, res) {
     if (err) {
-      logger.error('Error getting members from org: ' + REPO_LIST[repo_index].org + ' ' + err)
-      process.exit(1)
+      if (err.code == 404) {
+        //  Possibly a user and not an org
+        logger.warn(`Unable to fetch members from ${REPO_LIST[repo_index].org}, are you sure you typed the org name correctly? Skipping...`)
+        callback(err)
+      } else {
+        logger.error('Error getting members from org: ' + REPO_LIST[repo_index].org + ' ' + err)
+        callback(err)  
+      }
     }
     // this has loaded the first page of results
     // get the values we want out of this response
