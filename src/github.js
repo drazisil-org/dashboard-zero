@@ -54,11 +54,16 @@ function setToken (callback) {
 
     github.misc.rateLimit({}, function cb_rateLimit (err, res) {
       if (err) {
-        logger.error('Error checking rate limit: ' + err)
-        process.exit(1)
+        if (err.code = 401) {
+          const errMsg = `GitHub credentials rejected. Please double-check the config file.`
+          callback(errMsg)
+        } else {
+          logger.error('Error checking rate limit: ' + err)
+          callback(err, res)
+        }
       }
       // console.info('GitHub Login: Success')
-      callback()
+      callback(err, res)
     })
   } else {
     logger.error('GetHub Login: No Token')
@@ -599,7 +604,7 @@ function truthy (o) {
 
 module.exports = {
   init: init,
-  setToken: setToken,
+  setToken,
   getRateLeft: getRateLeft,
   getOrgMembers: getOrgMembers,
   getRepoIssues: getRepoIssues,
