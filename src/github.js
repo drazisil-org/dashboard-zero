@@ -54,11 +54,16 @@ function setToken (callback) {
 
     github.misc.rateLimit({}, function cb_rateLimit (err, res) {
       if (err) {
-        logger.error('Error checking rate limit: ' + err)
-        process.exit(1)
+        if (err.code = 401) {
+          const errMsg = `GitHub credentials rejected. Please double-check the config file.`
+          callback(errMsg)
+        } else {
+          logger.error('Error checking rate limit: ' + err)
+          callback(err, res)
+        }
       }
       // console.info('GitHub Login: Success')
-      callback()
+      callback(err, res)
     })
   } else {
     logger.error('GetHub Login: No Token')
@@ -401,8 +406,15 @@ function getCommentsFromIssue (issue_id) {
 
 function fetchIssueComments (err, res) {
   if (err) {
-    logger.error('Error getting issue commentsfrom org: ' + REPO_LIST[repo_index].org + ' ' + err)
-    process.exit(1)
+    if (err.code == 404) {
+      //  This should not occur, as all repos should exist.
+      // Does this error on no comments?
+      logger.warn(`Unable to fetch issue comments from ${REPO_LIST[repo_index].org}, are you sure you typed the org name correctly? Skipping...`)
+      callback(err)
+    } else {
+      logger.error('Error getting issue comments from org: ' + REPO_LIST[repo_index].org + ' ' + err)
+      callback(err)
+    }
   }
   if (github.hasNextPage(res)) {
     github.getNextPage(res, function cb_fetch_issue_comments (err, res) {
@@ -423,8 +435,15 @@ function processIssueComments (err, res) {
       process.exit(1)
     } else {
       // Why does this error?
-      logger.error('Error getting issue comments from org: ' + REPO_LIST[repo_index].org + ' ' + err)
-      process.exit(1)
+      if (err.code == 404) {
+        //  This should not occur, as all repos should exist.
+        // Does this error on no comments?
+        logger.warn(`Unable to fetch issue comments from ${REPO_LIST[repo_index].org}, are you sure you typed the org name correctly? Skipping...`)
+        callback(err)
+      } else {
+        logger.error('Error getting issue comments from org: ' + REPO_LIST[repo_index].org + ' ' + err)
+        callback(err)
+      }
     }
   }
   res.forEach(function fe_repo (element, index, array) {
@@ -489,8 +508,14 @@ function getOrgMembers (callback) {
   // To see the data from github: curl -i https://api.github.com/orgs/mozilla/repos?per_page=1
   github.orgs.getMembers(msg, function gotFromOrg (err, res) {
     if (err) {
-      logger.error('Error getting members from org: ' + REPO_LIST[repo_index].org + ' ' + err)
-      process.exit(1)
+      if (err.code == 404) {
+        //  Possibly a user and not an org
+        logger.warn(`Unable to fetch members from ${REPO_LIST[repo_index].org}, are you sure you typed the org name correctly? Skipping...`)
+        callback(err)
+      } else {
+        logger.error('Error getting members from org: ' + REPO_LIST[repo_index].org + ' ' + err)
+        callback(err)
+      }
     }
     // this has loaded the first page of results
     // get the values we want out of this response
@@ -579,7 +604,7 @@ function truthy (o) {
 
 module.exports = {
   init: init,
-  setToken: setToken,
+  setToken,
   getRateLeft: getRateLeft,
   getOrgMembers: getOrgMembers,
   getRepoIssues: getRepoIssues,

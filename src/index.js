@@ -22,12 +22,14 @@ function init (callback) {
         })
       }
       logger.error(err.message)
+      callback(err)
     }
     try {
       CONFIG = JSON.parse(data)
     } catch (err) {
       console.error(err.message)
       logger.error(err.message)
+      callback(err)
     } finally {
       SERVER_PORT = CONFIG['server_port'] || 3000
       gh.init(CONFIG, logger, callback)
@@ -274,7 +276,10 @@ function checkDataFiles (callback) {
     })
   } else if (args[2] === 'getRate') {
     gh.setToken(
-      function cb_setToken (status) {
+      function cb_setToken (err, status) {
+        if (err) {
+          throw err
+        }
         gh.getRateLeft(function done (rateLeft) {
           console.info(rateLeft)
           callback()
@@ -282,7 +287,10 @@ function checkDataFiles (callback) {
       })
   } else if (args[2] === 'updateLabels') {
     gh.setToken(
-      function cb_setToken (status) {
+      function cb_setToken (err, status) {
+        if (err) {
+          throw err
+        }
         gh.getRepoLabels(function done () {
           dbUpdateLabels(function done () {
             gh.getRateLeft(function done (rateLeft) {
@@ -306,6 +314,7 @@ function checkDataFiles (callback) {
         } else {
           console.error(err.message)
           logger.error(err.message)
+          callback(err)
         }
       } else {
         callback()
@@ -316,12 +325,30 @@ function checkDataFiles (callback) {
 
 function updateAll (callback) {
   gh.setToken(
-    function cb_setTokenIssues (status) {
-      gh.getOrgMembers(function done () {
-        gh.getRepoMilestones(function done () {
-          gh.getRepoLabels(function done () {
-            gh.getRepoIssues(function done () {
-              saveAll(function done () {
+    function cb_setTokenIssues (err, status) {
+      if (err) {
+        throw err
+      }
+      gh.getOrgMembers(function done (err) {
+        if (err) {
+          throw err
+        }
+        gh.getRepoMilestones(function done (err) {
+          if (err) {
+            throw err
+          }
+          gh.getRepoLabels(function done (err) {
+            if (err) {
+              throw err
+            }
+            gh.getRepoIssues(function done (err) {
+              if (err) {
+                throw err
+              }
+              saveAll(function done (err) {
+                if (err) {
+                  throw err
+                }
                 gh.getRateLeft(function done (rateLeft) {
                   console.info(rateLeft)
                   callback()
