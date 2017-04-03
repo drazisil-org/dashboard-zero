@@ -14,5 +14,6 @@ dependencies:
 test:
   pre:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit
+    - mkdir data
   override:
-    - istanbul cover --include-all-sources _mocha -- -R mocha-multi -O spec=-,xunit=$CIRCLE_TEST_REPORTS/junit/test-results.xml 'src/**/*.test.js' 
+    - istanbul cover --include-all-sources _mocha -- -R mocha-multi -O spec=-,xunit=$CIRCLE_TEST_REPORTS/junit/test-results.xml 'src/**/*.test.js'
