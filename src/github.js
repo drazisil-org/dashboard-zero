@@ -62,7 +62,7 @@ function setToken (callback) {
           callback(err, res)
         }
       }
-      // console.info('GitHub Login: Success')
+      // logger.info('GitHub Login: Success')
       callback(err, res)
     })
   } else {
@@ -83,7 +83,7 @@ function setToken (callback) {
  */
 function getRepoIssues (callback) {
   var githubClient = github
-  // console.info('Fetching issues for ' + REPO_LIST[repo_index].repo)
+  // logger.info('Fetching issues for ' + REPO_LIST[repo_index].repo)
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
   var msg = {
@@ -207,7 +207,7 @@ function getSelectedIssueValues (ghRes) {
  */
 function getRepoMilestones (callback) {
   var githubClient = github
-  // console.info('Fetching milestones for ' + REPO_LIST[repo_index].repo)
+  // logger.info('Fetching milestones for ' + REPO_LIST[repo_index].repo)
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
   var msg = {
@@ -308,7 +308,7 @@ function getSelectedMilestoneValues (ghRes) {
  */
 function getRepoLabels (callback) {
   var githubClient = github
-  // console.info('Fetching labels for ' + REPO_LIST[repo_index].repo)
+  // logger.info('Fetching labels for ' + REPO_LIST[repo_index].repo)
 
   // The options msg we send to the client http://mikedeboer.github.io/node-github/#repos.prototype.getFromOrg
   var msg = {
@@ -397,7 +397,7 @@ function getSelectedLabelValues (ghRes) {
 // ********************************
 
 function getCommentsFromIssue (issue_id) {
-  // console.info('Fetching issue comments for ' + REPO_LIST[repo_index].repo)
+  // logger.info('Fetching issue comments for ' + REPO_LIST[repo_index].repo)
 
   github.issues.getComments({'user': REPO_LIST[repo_index].org, 'repo': REPO_LIST[repo_index].repo, 'number': issue_id, 'per_page': 100}, function cb_get_comments_from_issue (err, res) {
     fetchIssueComments(err, processIssueComments(err, res))
@@ -428,7 +428,7 @@ function fetchIssueComments (err, res) {
 function processIssueComments (err, res) {
   if (err) {
     if (err.message === 'No next page found') {
-      console.log('Done with this repo')
+      logger.log('Done with this repo')
       return 'Done with this repo'
     } else if (err.message === '504: Gateway Timeout') {
       logger.error('Gateway timeout getting issue comments from org: ' + REPO_LIST[repo_index].org + ' ' + err)
